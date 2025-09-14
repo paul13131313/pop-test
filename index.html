@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>POP CULTURE TEST（全50問）</title>
+<style>
+  :root{--ok:#2e7d32;--ng:#c62828;--border:#e0e0e0;--ink:#111;--muted:#666;--bg:#fafafa;--card:#fff;}
+  body{font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'Noto Sans JP','Hiragino Kaku Gothic ProN',Meiryo,sans-serif; color:var(--ink); background:var(--bg); margin:0;}
+  header{position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid var(--border); padding:12px 16px;}
+  header h1{font-size:18px; margin:0 0 4px;}
+  header .meta{font-size:12px; color:var(--muted);}
+  main{max-width:960px; margin:18px auto 120px; padding:0 16px;}
+  .controls{position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:12px; flex-wrap:wrap;}
+  button{appearance:none; border:1px solid var(--border); background:#111; color:#fff; padding:10px 14px; border-radius:8px; font-weight:600; cursor:pointer}
+  button.secondary{background:#fff; color:#111;}
+  button:disabled{opacity:.6; cursor:not-allowed}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin:16px 0;}
+  .category{font-size:14px; font-weight:700; color:#555; margin:24px 0 8px;}
+  .qtitle{font-weight:700; margin:0 0 10px; line-height:1.4}
+  .opt{display:flex; align-items:flex-start; gap:10px; padding:8px 10px; border-radius:8px; border:1px solid transparent;}
+  .opt input{margin-top:3px}
+  .opt.correct{border-color:rgba(46,125,50,.35); background:rgba(76,175,80,.06)}
+  .opt.incorrect{border-color:rgba(198,40,40,.35); background:rgba(244,67,54,.06)}
+  .badge{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted);}
+  .result{margin:8px 0 0; font-weight:700;}
+  .scorebox{background:#fff; border:1px dashed var(--border); padding:8px 10px; border-radius:8px; display:inline-block; margin-left:8px;}
+  details{margin-top:8px;}
+  .small{font-size:12px; color:var(--muted);}
+</style>
+</head>
+<body>
+<header>
+  <h1>POP CULTURE TEST（全50問／選択式）</h1>
+  <div class="meta">カテゴリー別に選択して「採点する」を押してください。未回答があると採点できません。</div>
+</header>
+
+<main id="app"></main>
+
+<div class="controls">
+  <button id="gradeBtn">採点する</button>
+  <button id="resetBtn" class="secondary">回答をリセット</button>
+  <span id="scoreArea" class="scorebox" aria-live="polite"></span>
+</div>
+
+<script>
+/* ==== データ定義（問題・選択肢・正答） ==== */
+/* 正答はA=0, B=1, C=2, D=3 で指定 */
+const quiz = [
+  // 映画（Movie）
+  {cat:"映画（Movie）", q:"1990年代に公開されたハリウッド映画はどれ？", opts:["アベンジャーズ","アバター","ジュラシック・パーク","インセプション"], ans:2},
+  {cat:"映画（Movie）", q:"「I’ll be back.」というセリフで有名な映画は？", opts:["ロッキー","ターミネーター","プレデター","ランボー"], ans:1},
+  {cat:"映画（Movie）", q:"アカデミー賞で作品賞を受賞した唯一のファンタジー映画は？", opts:["ラビリンス","ハリー・ポッターと賢者の石","ナルニア国物語","ロード・オブ・ザ・リング／王の帰還"], ans:3},
+  {cat:"映画（Movie）", q:"『タイタニック』の監督は？", opts:["ジェームズ・キャメロン","リドリー・スコット","マーティン・スコセッシ","スティーヴン・スピルバーグ"], ans:0},
+  {cat:"映画（Movie）", q:"スター・ウォーズ初作（エピソード4）が公開されたのは？", opts:["1967年","1977年","1987年","1997年"], ans:1},
+  {cat:"映画（Movie）", q:"『ジョーカー』（2019）で主演を務めた俳優は？", opts:["ヒース・レジャー","レオナルド・ディカプリオ","ホアキン・フェニックス","ジャレッド・レト"], ans:2},
+  {cat:"映画（Movie）", q:"『マトリックス』シリーズで主人公ネオを演じた俳優は？", opts:["キアヌ・リーブス","トム・クルーズ","ジョニー・デップ","ブラッド・ピット"], ans:0},
+  {cat:"映画（Movie）", q:"『バック・トゥ・ザ・フューチャー』でタイムマシンとして改造された車は？", opts:["マスタング","フェラーリ","トランザム","デロリアン"], ans:3},
+  {cat:"映画（Movie）", q:"宮崎駿監督が初めて手がけた長編作品は？", opts:["天空の城ラピュタ","ルパン三世 カリオストロの城","風の谷のナウシカ","魔女の宅急便"], ans:1},
+  {cat:"映画（Movie）", q:"『ダークナイト』（2008）でジョーカー役を演じたのは？", opts:["ヒース・レジャー","ジャレッド・レト","ベネディクト・カンバーバッチ","ジョニー・デップ"], ans:0},
+
+  // 音楽（Music）
+  {cat:"音楽（Music）", q:"ニルヴァーナの代表曲は？", opts:["Wonderwall","Californication","My Heart Will Go On","Smells Like Teen Spirit"], ans:3},
+  {cat:"音楽（Music）", q:"マイケル・ジャクソンのアルバム『Thriller』が発売されたのは？", opts:["1992年","1982年","2002年","1972年"], ans:1},
+  {cat:"音楽（Music）", q:"ビートルズのメンバーではない人物は？", opts:["ポール・マッカートニー","ミック・ジャガー","リンゴ・スター","ジョン・レノン"], ans:1},
+  {cat:"音楽（Music）", q:"2010年代に世界的にブレイクした韓国のアーティストは？", opts:["BTS","Queen","Oasis","B’z"], ans:0},
+  {cat:"音楽（Music）", q:"ブリトニー・スピアーズの大ヒット曲は？", opts:["Rolling in the Deep","Waka Waka","Baby One More Time","Bad Guy"], ans:2},
+  {cat:"音楽（Music）", q:"クイーンの代表曲で、映画タイトルにもなった楽曲は？", opts:["Radio Ga Ga","Don’t Stop Me Now","Bohemian Rhapsody","We Will Rock You"], ans:2},
+  {cat:"音楽（Music）", q:"1969年に開催された伝説の音楽フェスは？", opts:["フジロック","サマーソニック","コーチェラ","ウッドストック"], ans:3},
+  {cat:"音楽（Music）", q:"エミネムが主演した映画は？", opts:["8 Mile","Ray","Notorious","Hustle & Flow"], ans:0},
+  {cat:"音楽（Music）", q:"レディー・ガガのデビュー曲は？", opts:["Bad Romance","Just Dance","Poker Face","Born This Way"], ans:1},
+  {cat:"音楽（Music）", q:"ビヨンセが所属していたグループは？", opts:["TLC","BLACKPINK","Destiny’s Child","Spice Girls"], ans:2},
+
+  // アニメ／ゲーム（Anime/Game）
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"ポケットモンスター赤・緑が発売されたのは？", opts:["2012年","2004年","1989年","1996年"], ans:3},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"『ドラゴンボール』の作者は？", opts:["手塚治虫","鳥山明","高橋留美子","藤子・F・不二雄"], ans:1},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"スーパーマリオブラザーズが初めて発売されたのは？", opts:["1985年","1990年","1995年","1980年"], ans:0},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"『新世紀エヴァンゲリオン』の主人公は？", opts:["渚カヲル","葛城ミサト","碇シンジ","碇ゲンドウ"], ans:2},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"1995年公開のスタジオジブリ作品は？", opts:["もののけ姫","ハウルの動く城","魔女の宅急便","耳をすませば"], ans:3},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"任天堂の家庭用ゲーム機「Wii」が発売されたのは？", opts:["2010年","2006年","2014年","2000年"], ans:1},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"『ポケモン』赤・緑版で御三家に含まれないのは？", opts:["フシギダネ","ゼニガメ","ピカチュウ","ヒトカゲ"], ans:2},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"『セーラームーン』の主人公・月野うさぎが変身すると？", opts:["セーラームーン","セーラーマーズ","セーラーヴィーナス","セーラーマーキュリー"], ans:0},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"『Minecraft』が初めてリリースされたのは？", opts:["2015年","2009年","2018年","2012年"], ans:1},
+  {cat:"アニメ／ゲーム（Anime/Game）", q:"『進撃の巨人』の作者は？", opts:["高橋和希","荒木飛呂彦","吾峠呼世晴","諫山創"], ans:3},
+
+  // ファッション／サブカル（Fashion/Subculture）
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"「ボディコン」と関係の深い場所は？", opts:["ディスコ","温泉","漫画喫茶","公園"], ans:0},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"1970年代アメリカで流行した音楽と直結するファッションは？", opts:["ヒップホップとスウェット","パンクロックと革ジャン","ディスコミュージックとベルボトム","フォークとサロペット"], ans:2},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"2000年代初期に流行したズボンの形は？", opts:["バギーパンツ","サルエルパンツ","ベルボトム","スキニージーンズ"], ans:3},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"原宿の「竹下通り」で有名になったカラフルなファッション文化は？", opts:["ロリータ系","デコラ系","ギャル系","森ガール"], ans:1},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"1990年代に流行した渋谷ギャル文化を象徴するブランドは？", opts:["SHIBUYA109系ブランド","コム・デ・ギャルソン","ユニクロ","GAP"], ans:0},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"1960年代イギリスの「モッズ」が愛用したスクーターは？", opts:["ハーレー","ドゥカティ","BMW","ベスパ"], ans:3},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"日本で「裏原系」と呼ばれたファッション文化が盛り上がったのは？", opts:["1970年代","1990年代","1980年代","2000年代"], ans:1},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"2010年代に流行した「ノームコア」とは？", opts:["民族衣装を取り入れる","派手な色合いを使う","普通すぎる格好を意図的にする","豪華な装飾を施す"], ans:2},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"1970年代の日本で流行した厚底靴は？", opts:["シークレットシューズ","ドクターマーチン","ポンプス","ブーツカット"], ans:0},
+  {cat:"ファッション／サブカル（Fashion/Subculture）", q:"カルチャー誌『FRUiTS』が取り上げたのはどんなファッション？", opts:["高級ブランド中心","ビジネススーツ","着物リバイバル","原宿ストリートスナップ"], ans:3},
+
+  // インターネット文化（Internet Culture）
+  {cat:"インターネット文化（Internet Culture）", q:"「2ちゃんねる」が開設されたのは？", opts:["2010年","2015年","1999年","2005年"], ans:2},
+  {cat:"インターネット文化（Internet Culture）", q:"世界初のSNSと呼ばれることが多いサービスは？", opts:["Mixi","Friendster","Twitter","Facebook"], ans:1},
+  {cat:"インターネット文化（Internet Culture）", q:"「踊ってみた」文化を広めた日本のプラットフォームは？", opts:["ニコニコ動画","YouTube","TikTok","Vine"], ans:0},
+  {cat:"インターネット文化（Internet Culture）", q:"Twitter（現X）がサービス開始したのは？", opts:["2004年","2001年","2010年","2006年"], ans:3},
+  {cat:"インターネット文化（Internet Culture）", q:"YouTuberという言葉が一般化したのは？", opts:["2005年頃","2015年頃","2010年頃","2000年頃"], ans:2},
+  {cat:"インターネット文化（Internet Culture）", q:"「LOL」はネットスラングで何を意味する？", opts:["Lack of Luck","Laugh Out Loud","Lots of Love","Level of Life"], ans:1},
+  {cat:"インターネット文化（Internet Culture）", q:"日本の「初音ミク」が登場したのは？", opts:["2018年","2013年","2001年","2007年"], ans:3},
+  {cat:"インターネット文化（Internet Culture）", q:"TikTokが世界的にブームになり始めたのは？", opts:["2010年","2023年","2017年","2005年"], ans:2},
+  {cat:"インターネット文化（Internet Culture）", q:"「バルス！」がTwitterでトレンド世界1位になった作品は？", opts:["天空の城ラピュタ","ハウルの動く城","千と千尋の神隠し","紅の豚"], ans:0},
+  {cat:"インターネット文化（Internet Culture）", q:"「YouはShock！」で始まるアニメ主題歌は？", opts:["ワンピース","ナルト","鉄腕アトム","北斗の拳"], ans:3},
+];
+
+/* ==== 描画 ==== */
+const app = document.getElementById('app');
+let sectionIndex = -1;
+quiz.forEach((item, i) => {
+  // カテゴリ見出し（最初 or カテゴリ切替時）
+  if (i===0 || quiz[i-1].cat !== item.cat) {
+    const h = document.createElement('div');
+    h.className = 'category';
+    h.textContent = `■ ${item.cat}`;
+    app.appendChild(h);
+    sectionIndex++;
+  }
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = `q${i}`;
+  card.innerHTML = `
+    <div class="qtitle">Q${i+1}. ${item.q}</div>
+    <div class="opts"></div>
+    <div class="small" id="res${i}"></div>
+  `;
+  const optsWrap = card.querySelector('.opts');
+  item.opts.forEach((text, idx) => {
+    const opt = document.createElement('label');
+    opt.className = 'opt';
+    opt.innerHTML = `
+      <input type="radio" name="q${i}" value="${idx}" />
+      <div><span class="badge">${"ABCD"[idx]}</span> ${text}</div>
+    `;
+    optsWrap.appendChild(opt);
+  });
+  app.appendChild(card);
+});
+
+/* ==== 採点 ==== */
+const gradeBtn = document.getElementById('gradeBtn');
+const resetBtn = document.getElementById('resetBtn');
+const scoreArea = document.getElementById('scoreArea');
+
+gradeBtn.addEventListener('click', () => {
+  // 未回答チェック
+  for (let i=0;i<quiz.length;i++){
+    const chosen = document.querySelector(`input[name="q${i}"]:checked`);
+    if (!chosen){
+      alert(`未回答の問題があります（Q${i+1}）。`);
+      document.getElementById(`q${i}`).scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+  }
+
+  let score = 0;
+  let catScore = {}; let catTotal = {};
+  quiz.forEach((item,i)=>{
+    const chosen = document.querySelector(`input[name="q${i}"]:checked`);
+    const chosenVal = Number(chosen.value);
+    const opts = document.querySelectorAll(`#q${i} .opt`);
+    // 色付け
+    opts.forEach((el,idx)=>{
+      el.classList.remove('correct','incorrect');
+      if (idx === item.ans) el.classList.add('correct');
+      if (idx === chosenVal && chosenVal !== item.ans) el.classList.add('incorrect');
+    });
+    const res = document.getElementById(`res${i}`);
+    const ok = chosenVal === item.ans;
+    if (ok) score++;
+    // カテゴリ集計
+    catTotal[item.cat] = (catTotal[item.cat]||0)+1;
+    catScore[item.cat] = (catScore[item.cat]||0)+(ok?1:0);
+    // 文言
+    res.textContent = ok ? "正解！" : `不正解：正答は「${"ABCD"[item.ans]}」`;
+    res.style.color = ok ? "var(--ok)" : "var(--ng)";
+  });
+
+  // スコア表示（カテゴリ別内訳つき）
+  const parts = Object.keys(catTotal).map(cat=>`${cat}: ${catScore[cat]}/${catTotal[cat]}`).join(" ｜ ");
+  scoreArea.textContent = `総合スコア：${score}/${quiz.length}　｜　${parts}`;
+  window.scrollTo({top:0, behavior:'smooth'});
+  gradeBtn.disabled = true;
+});
+
+resetBtn.addEventListener('click', ()=>{
+  // 回答解除 & 装飾解除
+  for (let i=0;i<quiz.length;i++){
+    document.querySelectorAll(`input[name="q${i}"]`).forEach(r=>r.checked=false);
+    document.querySelectorAll(`#q${i} .opt`).forEach(el=>el.classList.remove('correct','incorrect'));
+    const res = document.getElementById(`res${i}`); res.textContent = ""; res.removeAttribute('style');
+  }
+  gradeBtn.disabled = false;
+  scoreArea.textContent = "";
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+</script>
+</body>
+</html>
